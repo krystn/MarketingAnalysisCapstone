@@ -1,5 +1,18 @@
 /* Exploratory Data Analysis */
 
+-- CALCULATED BENCHMARKS
+SELECT SUM(`Gross Cost`) / SUM(`Total Conversions`) AS avg_cpa
+FROM data_staging;
+
+SELECT SUM(`Gross Cost`) / SUM(Clicks) AS avg_cpc
+FROM data_staging;
+
+SELECT (SUM(`Gross Cost`) / SUM(`Impressions`)) * 1000 AS avg_cpm
+FROM data_staging;
+
+SELECT *
+FROM data_staging;
+
 -- EXCHANGE KPIs
 SELECT 
 	Exchange,
