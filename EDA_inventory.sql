@@ -3,38 +3,62 @@
 -- EXCHANGE KPIs
 SELECT 
 	Exchange,
-    SUM(`Viewable Impressions`)/SUM(Impressions) AS viewability_rate,
-    ROUND((SUM(`Gross Cost`)*1000 / SUM(`Viewable Impressions`)), 2) AS vcpm,
-    ROUND((SUM(`Gross Cost`) / SUM(`Total Conversions`)), 2) AS cpa,
-    SUM(Clicks) / SUM(Impressions) AS ctr,
-    ROUND(SUM(`Gross Cost`) / SUM(Clicks), 2) AS cpc,
-    ROUND(SUM(`Gross Cost`) / SUM(Impressions) * 1000, 2) AS cpm,
-    SUM(`Total Conversions`) / SUM(Clicks) AS cvr
+    AVG(`Viewable Impressions`/Impressions) AS viewability_rate,
+    ROUND(AVG(`Gross Cost`*1000 / `Viewable Impressions`), 2) AS vcpm,
+    ROUND((AVG(`Gross Cost`/`Total Conversions`)), 2) AS cpa,
+    AVG(Clicks/Impressions) AS ctr,
+    ROUND(AVG(`Gross Cost`/Clicks), 2) AS cpc,
+    ROUND(AVG(`Gross Cost`/Impressions) * 1000, 2) AS cpm,
+    AVG(`Total Conversions`/Clicks) AS cvr
 FROM data_staging
 GROUP BY Exchange
-HAVING 
-	SUM(Impressions) > 10000 
-	AND SUM(`Viewable Impressions`) / SUM(Impressions) > 0.5
-    AND vcpm < 80
-ORDER BY ctr DESC;
+ORDER BY viewability_rate DESC;
+
 
 -- PUBLISHER KPIs
 SELECT 
 	`App/URL` AS publisher,
-    SUM(`Viewable Impressions`) / SUM(Impressions) AS viewability_rate,
-    ROUND((SUM(`Gross Cost`)*1000 / SUM(`Viewable Impressions`)), 2) AS vcpm,
-    ROUND((SUM(`Gross Cost`) / SUM(`Total Conversions`)), 2) AS cpa,
-    SUM(Clicks) / SUM(Impressions) AS ctr,
-    ROUND(SUM(`Gross Cost`) / SUM(Clicks), 2) AS cpc,
-    ROUND(SUM(`Gross Cost`) / SUM(Impressions) * 1000, 2) AS cpm,
-    SUM(`Total Conversions`) / SUM(Clicks) AS cvr
+    AVG(`Viewable Impressions`/Impressions) AS viewability_rate,
+    ROUND(AVG(`Gross Cost`*1000 / `Viewable Impressions`), 2) AS vcpm,
+    ROUND((AVG(`Gross Cost`/`Total Conversions`)), 2) AS cpa,
+    AVG(Clicks/Impressions) AS ctr,
+    ROUND(AVG(`Gross Cost`/Clicks), 2) AS cpc,
+    ROUND(AVG(`Gross Cost`/Impressions) * 1000, 2) AS cpm,
+    AVG(`Total Conversions`/Clicks) AS cvr
 FROM data_staging
-GROUP BY `App/URL`
+GROUP BY publisher
 HAVING 
-	SUM(Impressions) > 10000 
-	AND viewability_rate > 0.6 
+    vcpm < 80
+ORDER BY viewability_rate DESC;
+
+
+-- PUBLISHER & EXCHANGE KPIs
+SELECT 
+	`App/URL` AS publisher,
+    Exchange,
+    AVG(`Viewable Impressions`/Impressions) AS viewability_rate,
+    ROUND(AVG(`Gross Cost`*1000 / `Viewable Impressions`), 2) AS vcpm,
+    ROUND((AVG(`Gross Cost`/`Total Conversions`)), 2) AS cpa,
+    AVG(Clicks/Impressions) AS ctr,
+    ROUND(AVG(`Gross Cost`/Clicks), 2) AS cpc,
+    ROUND(AVG(`Gross Cost`/Impressions) * 1000, 2) AS cpm,
+    AVG(`Total Conversions`/Clicks) AS cvr
+FROM data_staging
+GROUP BY `App/URL`, Exchange
+HAVING 
+	viewability_rate > 0.6 
     AND vcpm < 80
-ORDER BY ctr DESC;
+ORDER BY `App/URL`;
+
+
+SELECT publisher, exchange_count
+FROM (
+	SELECT `App/URL` AS publisher, COUNT(DISTINCT Exchange) AS exchange_count
+    FROM data_staging
+    GROUP BY `App/URL`
+) AS sub
+WHERE exchange_count > 1
+ORDER BY exchange_count DESC;
 
 
 SELECT *
